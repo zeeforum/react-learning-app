@@ -1,80 +1,59 @@
 import React from "react";
-import Movies from "./components/movies/movies";
-import './App.css';
-// import NavBar from "./components/navbar";
-// import Counters from "./components/counter/counters";
+import { Route, Switch, Redirect } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { far } from "@fortawesome/free-regular-svg-icons";
 
+import RegisterForm from "./components/auth/register-form";
+import LoginForm from './components/auth/login-form';
+import Customers from "./components/customers";
+import Rental from "./components/rental";
+import NotFound from "./components/not-found";
+import Movies from "./components/movies/movies";
+import MoviesForm from "./components/movies/movie-form";
+import NavBar from "./components/navbar";
+import Logout from './components/auth/logout';
+import ProtectedRoute from "./components/common/protected-route";
+
+import auth from "./services/auth-service";
+
+import './App.css';
+import "react-toastify/dist/ReactToastify.css";
+
 library.add(fas, far);
 
 class App extends React.Component {
-	state = {
-		counters: [
-			{ id: 1, value: 2 },
-			{ id: 2, value: 0 },
-			{ id: 3, value: 0 },
-			{ id: 4, value: 0 },
-		],
-	};
+	state = {};
 
-	getTotal() {
-		return this.state.counters.filter((counter) => counter.value > 0).length;
-	}
-
-	handleReset = () => {
-		const counters = this.state.counters.filter((c) => {
-			c.value = 0;
-			return c;
-		});
-
-		this.setState({ counters });
-	};
-
-	handleIncrement = (counter) => {
-		const counters = [...this.state.counters];
-		const index = counters.indexOf(counter);
-		counters[index] = { ...counter };
-		counters[index].value++;
-		this.setState({ counters });
-  }
-  
-  handleDecrement = (counter) => {
-    if (counter.value <= 0) {
-      return;
-    }
-
-		const counters = [...this.state.counters];
-		const index = counters.indexOf(counter);
-		counters[index] = { ...counter };
-		counters[index].value--;
-		this.setState({ counters });
-	}
-
-	handleDelete = (counterId) => {
-		const counters = this.state.counters.filter((c) => c.id !== counterId);
+	componentDidMount() {
+		const user = auth.getCurrentUser();
 		this.setState({
-			counters,
+			user
 		});
-	};
+	}
 
 	render() {
+		const { user } = this.state;
 		return (
 			<React.Fragment>
-				<Movies />
-				{/* <NavBar totalCounters={this.getTotal()} />
-
-				<main className="container mt-2">
-					<Counters
-						counters={this.state.counters}
-						onReset={this.handleReset}
-            			onIncrement={this.handleIncrement}
-            			onDecrement={this.handleDecrement}
-						onDelete={this.handleDelete}
-					/>
-				</main> */}
+				<ToastContainer />
+				<NavBar user={user} />
+				<div className="container mt-3">
+					<Switch>
+						<Route path="/register" component={RegisterForm} />
+						<Route path="/login" component={LoginForm} />
+						<Route path="/logout" component={Logout} />
+						<Route path="/customers" component={Customers} />
+						<Route path="/rental" component={Rental} />
+						<ProtectedRoute path="/movies/:id" component={MoviesForm} />
+						<Route path="/movies" render={props => <Movies {...props} user={this.state.user} />} />
+						<Route path="/not-found" component={NotFound} />
+						<Redirect from="/" to="/movies" exact />
+						<Redirect to="/not-found" />
+					</Switch>
+				</div>
 			</React.Fragment>
 		);
 	}
